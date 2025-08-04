@@ -50,9 +50,10 @@ export default function DashboardPage() {
     initializeApp()
 
     // PWA install prompt logic
-    const handleBeforeInstallPrompt = (e: Event) => {
+    const handleBeforeInstallPrompt = (e: any) => {
       console.log('beforeinstallprompt event fired')
-      e.preventDefault()
+      // Important: Don't prevent default here to allow the banner to show
+      // Store the event for later use
       setDeferredPrompt(e)
       setCanInstall(true)
     }
@@ -101,7 +102,11 @@ export default function DashboardPage() {
     if (deferredPrompt) {
       try {
         // For Chrome/Edge/other browsers
+        // This is the key part - we need to call prompt() to show the installation prompt
+        // The browser will only show the prompt if it's called from a user gesture (like a click)
         deferredPrompt.prompt()
+        
+        // Wait for the user to respond to the prompt
         const { outcome } = await deferredPrompt.userChoice
         console.log('Install prompt outcome:', outcome)
         
@@ -109,12 +114,15 @@ export default function DashboardPage() {
           showNotification("App installed successfully! 🎉", "success")
           setCanInstall(false)
         }
+        
+        // Clear the saved prompt since it can't be used again
         setDeferredPrompt(null)
       } catch (error) {
         console.error('Error during install:', error)
         showFallbackInstallInstructions()
       }
     } else {
+      // If no deferredPrompt is available, show manual installation instructions
       showFallbackInstallInstructions()
     }
   }

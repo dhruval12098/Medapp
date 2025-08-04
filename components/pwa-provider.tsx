@@ -31,8 +31,9 @@ export function PWAProvider({ children }: PWAProviderProps) {
     }
 
     // Handle beforeinstallprompt event
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault()
+    const handleBeforeInstallPrompt = (e: any) => {
+      // Don't prevent default to allow the banner to show
+      // Just store the event for later use
       setDeferredPrompt(e)
       setIsInstallable(true)
     }
@@ -58,15 +59,28 @@ export function PWAProvider({ children }: PWAProviderProps) {
 
   const installApp = async () => {
     if (deferredPrompt) {
-      deferredPrompt.prompt()
-      const { outcome } = await deferredPrompt.userChoice
-      
-      if (outcome === 'accepted') {
-        setIsInstalled(true)
-        setIsInstallable(false)
+      try {
+        // Show the installation prompt
+        // This must be called from a user gesture handler (like a button click)
+        deferredPrompt.prompt()
+        
+        // Wait for the user's choice
+        const { outcome } = await deferredPrompt.userChoice
+        console.log('Installation prompt outcome:', outcome)
+        
+        if (outcome === 'accepted') {
+          console.log('PWA was installed successfully')
+          setIsInstalled(true)
+          setIsInstallable(false)
+        }
+        
+        // Clear the saved prompt as it can only be used once
+        setDeferredPrompt(null)
+      } catch (error) {
+        console.error('Error during PWA installation:', error)
       }
-      
-      setDeferredPrompt(null)
+    } else {
+      console.log('No installation prompt available')
     }
   }
 

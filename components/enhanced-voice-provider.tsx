@@ -43,9 +43,16 @@ export function EnhancedVoiceProvider({ children }: { children: React.ReactNode 
         console.log("Available voices:", voices)
       }
 
+      // Initial load attempt
       loadVoices()
+      
+      // Set up event listener for when voices are loaded
       window.speechSynthesis.onvoiceschanged = loadVoices
+      
+      // Multiple attempts to load voices with increasing delays
+      setTimeout(loadVoices, 500)
       setTimeout(loadVoices, 1000)
+      setTimeout(loadVoices, 2000)
     } else {
       setDebugInfo("Speech synthesis not supported in this browser")
     }

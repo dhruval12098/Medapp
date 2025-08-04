@@ -40,12 +40,17 @@ export function MedicationReminder() {
               setLastSpoken(text)
             }
             if ("Notification" in window && Notification.permission === "granted") {
+              // Play alarm sound
+              const audio = new Audio("/alarm-sound.mp3")
+              audio.play().catch(err => console.error("Error playing alarm sound:", err))
+              
               new Notification(t("reminderTitle"), {
                 body: t("reminderBody", { medicine: item.medicineName, dosage: item.dosage }),
                 icon: "/icon-192x192.png",
                 badge: "/icon-192x192.png",
                 tag: item.id,
                 requireInteraction: true,
+                silent: false
               })
             }
             showNotification(t("takeMedicine", { medicine: item.medicineName, dosage: item.dosage }), "success")
@@ -55,6 +60,10 @@ export function MedicationReminder() {
             if (!currentReminder) {
               setCurrentReminder(item)
               setReminderCount(0)
+              
+              // Play alarm sound for the main reminder
+              const audio = new Audio("/alarm-sound.mp3")
+              audio.play().catch(err => console.error("Error playing alarm sound:", err))
             }
             const text = t("takeMedicine", { medicine: item.medicineName, dosage: item.dosage })
             if (lastSpoken !== `${text}-${reminderCount}` && !isSpeaking) {
@@ -131,6 +140,11 @@ export function MedicationReminder() {
 
       setTimeout(() => {
         setCurrentReminder({ ...currentReminder, status: "pending" })
+        
+        // Play alarm sound when reminder returns after snooze
+        const audio = new Audio("/alarm-sound.mp3")
+        audio.play().catch(err => console.error("Error playing alarm sound:", err))
+        
         const retryText = t("takeMedicine", { medicine: currentReminder.medicineName, dosage: currentReminder.dosage })
         if (!isSpeaking) {
           speak(retryText)

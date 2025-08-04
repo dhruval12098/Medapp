@@ -23,10 +23,15 @@ export function NotificationSetup() {
       setPermission(result)
 
       if (result === "granted") {
+        // Play a success sound when permissions are granted
+        const audio = new Audio("/success-sound.mp3")
+        audio.play().catch(err => console.error("Error playing success sound:", err))
+        
         new Notification("MedTracker Notifications Enabled! 🎉", {
-          body: "You'll now receive medicine reminders",
+          body: "You'll now receive medicine reminders with alarm sounds",
           icon: "/icon-192x192.png",
           badge: "/icon-192x192.png",
+          silent: false
         })
       }
     } catch (error) {
@@ -36,11 +41,16 @@ export function NotificationSetup() {
 
   const testNotification = () => {
     if (permission === "granted") {
+      // Play alarm sound for test notification
+      const audio = new Audio("/alarm-sound.mp3")
+      audio.play().catch(err => console.error("Error playing alarm sound:", err))
+      
       new Notification("Test Medicine Reminder 💊", {
         body: "Time to take your Aspirin - 1 tablet",
         icon: "/icon-192x192.png",
         badge: "/icon-192x192.png",
         requireInteraction: true,
+        silent: false
       })
     }
   }

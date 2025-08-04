@@ -70,11 +70,22 @@ export default function RootLayout({
           {`
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function(registration) {
                   console.log('SW registered: ', registration);
+                  
+                  // Check for updates to the service worker
+                  registration.addEventListener('updatefound', function() {
+                    console.log('Service worker update found!');
+                  });
+                  
                 }).catch(function(registrationError) {
                   console.log('SW registration failed: ', registrationError);
                 });
+              });
+              
+              // Log when beforeinstallprompt is fired or prevented
+              window.addEventListener('beforeinstallprompt', function(e) {
+                console.log('beforeinstallprompt event fired and not prevented');
               });
             }
           `}

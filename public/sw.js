@@ -1,4 +1,4 @@
-const CACHE_NAME = "medtracker-v1"
+const CACHE_NAME = "medtracker-v2"
 const urlsToCache = [
   "/",
   "/add-medicine",
@@ -6,7 +6,8 @@ const urlsToCache = [
   "/contacts",
   "/history",
   "/settings",
-  "/manifest.json",
+  "/app/manifest.json",
+  "/manifest.json", // Include both paths for compatibility
   "/icon-192x192.png",
   "/icon-512x512.png",
 ]
@@ -50,7 +51,8 @@ self.addEventListener("push", (event) => {
     body: event.data ? event.data.text() : "Time to take your medicine!",
     icon: "/icon-192x192.png",
     badge: "/icon-192x192.png",
-    vibrate: [200, 100, 200],
+    vibrate: [200, 100, 200, 200, 100, 400],
+    sound: "/alarm-sound.mp3",
     data: {
       dateOfArrival: Date.now(),
       primaryKey: 1,
