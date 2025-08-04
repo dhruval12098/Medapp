@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label"
 import { MessageCircle } from "lucide-react"
 import { useNotification } from "@/components/notification-provider"
 import { useLanguage } from "@/components/language-provider"
-import { sendSMS } from "@/lib/sms-service"
 import { getUserProfile } from "@/lib/supabase-storage"
 
 export default function SMSTest() {
@@ -19,12 +18,22 @@ export default function SMSTest() {
   const handleSendTestSMS = async () => {
     setIsSending(true)
     try {
-      const user = await getUserProfile()
-      await sendSMS(
-        { ...user, phone: phoneNumber || user.phone },
-        "This is a test SMS from MedTracker."
-      )
-      showNotification(t("testSMSSent"), "success")
+      const response = await fetch('/api/send-instant-sms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: phoneNumber,
+          message: "This is a test SMS from MedTracker."
+        })
+      })
+      
+      if (response.ok) {
+        showNotification(t("testSMSSent"), "success")
+      } else {
+        showNotification(t("testSMSError"), "error")
+      }
     } catch (error) {
       showNotification(t("testSMSError"), "error")
     } finally {
