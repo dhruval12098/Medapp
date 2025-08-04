@@ -91,26 +91,47 @@ export default function SettingsPage() {
   }
 
   const testNotification = () => {
-    if ("Notification" in window) {
+    if ("Notification" in window && "serviceWorker" in navigator) {
       if (Notification.permission === "granted") {
-        new Notification(t("reminderTitle"), {
-          body: t("testNotification"),
-          icon: "/icon-192x192.png",
+        // Use service worker to show notification (works in PWA)
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.showNotification(t("reminderTitle"), {
+            body: t("testNotification"),
+            icon: "/icon-192x192.png",
+            badge: "/icon-72x72.png",
+            // @ts-ignore - Actions property is supported in modern browsers but not in TypeScript types
+            actions: [
+
+              { action: "taken", title: "Taken" },
+              { action: "snooze", title: "Snooze" }
+            ]
+          })
+          showNotification(t("testNotificationSent"), "success")
         })
-        showNotification(t("testNotificationSent"), "success")
       } else if (Notification.permission !== "denied") {
         Notification.requestPermission().then((permission) => {
           if (permission === "granted") {
-            new Notification(t("reminderTitle"), {
-              body: t("notificationsEnabled"),
-              icon: "/icon-192x192.png",
+            navigator.serviceWorker.ready.then((registration) => {
+              registration.showNotification(t("reminderTitle"), {
+                body: t("notificationsEnabled"),
+                icon: "/icon-192x192.png",
+                badge: "/icon-72x72.png",
+                // @ts-ignore - Actions property is supported in modern browsers but not in TypeScript types
+                actions: [
+                  { action: "taken", title: "Taken" },
+                  { action: "snooze", title: "Snooze" }
+                ]
+              })
+              showNotification(t("notificationsEnabled"), "success")
             })
-            showNotification(t("notificationsEnabled"), "success")
           }
         })
       } else {
         showNotification(t("notificationsBlocked"), "error")
       }
+    } else {
+      // Fallback for environments without service worker support
+      showNotification("Notifications not supported", "error")
     }
   }
 
