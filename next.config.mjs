@@ -9,6 +9,19 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Don't bundle server-only modules on client-side
+      config.resolve.fallback = {
+        net: false,
+        tls: false,
+        fs: false,
+        dns: false,
+        'https-proxy-agent': false,
+      }
+    }
+    return config
+  },
   // Add PWA configuration
   async headers() {
     return [
