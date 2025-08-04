@@ -21,8 +21,8 @@ export const scheduleSMSReminders = async (): Promise<void> => {
   const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
   for (const user of users) {
-    // Use user's custom threshold or default to 3
-    const threshold = user.missed_reminder_threshold || 3;
+    // 🔄 CHANGED: Use user's custom threshold or default to 1
+    const threshold = user.missed_reminder_threshold || 1;
 
     // Fetch today's scheduled medicines for the user
     const { data: schedules, error: scheduleError } = await supabase
