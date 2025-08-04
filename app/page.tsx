@@ -95,7 +95,10 @@ export default function DashboardPage() {
   const handleInstallClick = async () => {
     console.log('Install button clicked', { deferredPrompt, canInstall })
     
-    if (deferredPrompt) {
+    // Check if the device is mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    
+    if (isMobile && deferredPrompt) {
       try {
         deferredPrompt.prompt()
         const { outcome } = await deferredPrompt.userChoice
@@ -109,26 +112,8 @@ export default function DashboardPage() {
         setDeferredPrompt(null)
       } catch (error) {
         console.error('Error during install:', error)
-        showFallbackInstallInstructions()
+        showNotification("Failed to install the app", "error")
       }
-    } else {
-      showFallbackInstallInstructions()
-    }
-  }
-
-  const showFallbackInstallInstructions = () => {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-    const isFirefox = navigator.userAgent.toLowerCase().includes('firefox')
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
-    
-    if (isIOS) {
-      showNotification("iOS: Tap Share button (↗️) → Add to Home Screen", "success")
-    } else if (isFirefox) {
-      showNotification("Firefox: Menu (☰) → Install App", "success")
-    } else if (isSafari) {
-      showNotification("Safari: Share menu → Add to Home Screen", "success")
-    } else {
-      showNotification("Look for 'Install' option in browser menu", "success")
     }
   }
 
