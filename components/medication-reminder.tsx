@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useVoice } from "@/components/enhanced-voice-provider"
 import { useLanguage } from "@/components/language-provider"
 import { useNotification } from "@/components/notification-provider"
@@ -8,14 +8,95 @@ import { getTodaySchedule, markMedicineAsTaken, markMedicineAsMissed } from "@/l
 import { resetMissedReminder, incrementMissedReminder } from "@/lib/reminder-tracker"
 import { supabase } from "@/lib/supabase"
 import type { ScheduleItem } from "@/lib/types"
+import { usePushNotification } from "@/components/push-notification-service"
 
 export function MedicationReminder() {
   const [currentReminder, setCurrentReminder] = useState<ScheduleItem | null>(null)
   const { speak, isSpeaking } = useVoice()
   const { t } = useLanguage()
   const { showNotification } = useNotification()
+  const { isSubscribed } = usePushNotification()
   const [reminderCount, setReminderCount] = useState(0)
   const [lastSpoken, setLastSpoken] = useState<string | null>(null)
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null)
+
+  // Initialize audio element for alarm sound
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const audio = new Audio('/alarm-sound.mp3')
+      audio.loop = false
+      setAudioElement(audio)
+    }
+  }, [])
+
+  // Handle service worker messages
+  const handleServiceWorkerMessage = useCallback((event: MessageEvent) => {
+    console.log('Received message from service worker:', event.data)
+    
+    if (event.data.type === 'PLAY_ALARM_SOUND') {
+      // Play alarm sound when requested by service worker
+      if (audioElement) {
+        audioElement.currentTime = 0
+        audioElement.play().catch(err => console.error('Error playing alarm sound:', err))
+      } else {
+        const tempAudio = new Audio('/alarm-sound.mp3')
+        tempAudio.play().catch(err => console.error('Error playing alarm sound:', err))
+      }
+    } else if (event.data.type === 'MEDICINE_TAKEN') {
+      // Handle medicine taken action from notification
+      if (event.data.scheduleId) {
+        handleTakeMedicineById(event.data.scheduleId)
+      }
+    } else if (event.data.type === 'MEDICINE_SNOOZED') {
+      // Handle medicine snoozed action from notification
+      if (event.data.scheduleId) {
+        // We don't need to do anything here as the service worker will show a new notification
+        showNotification(t('snoozeMessage'), 'success')
+      }
+    }
+  }, [audioElement, showNotification, t])
+
+  // Set up service worker message listener
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage)
+      
+      return () => {
+        navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage)
+      }
+    }
+  }, [handleServiceWorkerMessage])
+
+  // Handle URL parameters for actions from service worker
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      const action = url.searchParams.get('action')
+      const scheduleId = url.searchParams.get('scheduleId')
+      
+      if (action === 'taken' && scheduleId) {
+        handleTakeMedicineById(scheduleId)
+        
+        // Clean up URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname)
+      }
+    }
+  }, [])
+
+  // Helper function to handle taking medicine by ID
+  const handleTakeMedicineById = async (scheduleId: string) => {
+    try {
+      const schedule = await getTodaySchedule()
+      const item = schedule.find(item => item.id === scheduleId)
+      
+      if (item) {
+        setCurrentReminder(item)
+        handleTakeMedicine()
+      }
+    } catch (error) {
+      console.error('Error handling medicine taken by ID:', error)
+    }
+  }
 
   useEffect(() => {
     const checkForReminders = async () => {
@@ -39,11 +120,15 @@ export function MedicationReminder() {
               speak(text)
               setLastSpoken(text)
             }
-            if ("Notification" in window && Notification.permission === "granted") {
-              // Play alarm sound
-              const audio = new Audio("/alarm-sound.mp3")
-              audio.play().catch(err => console.error("Error playing alarm sound:", err))
-              
+            
+            // Play alarm sound
+            if (audioElement) {
+              audioElement.currentTime = 0
+              audioElement.play().catch(err => console.error("Error playing alarm sound:", err))
+            }
+            
+            // Show notification if we're not using push notifications or if push is not supported
+            if ("Notification" in window && Notification.permission === "granted" && !isSubscribed) {
               new Notification(t("reminderTitle"), {
                 body: t("reminderBody", { medicine: item.medicineName, dosage: item.dosage }),
                 icon: "/icon-192x192.png",
@@ -53,6 +138,7 @@ export function MedicationReminder() {
                 silent: false
               })
             }
+            
             showNotification(t("takeMedicine", { medicine: item.medicineName, dosage: item.dosage }), "success")
           }
 
@@ -62,8 +148,10 @@ export function MedicationReminder() {
               setReminderCount(0)
               
               // Play alarm sound for the main reminder
-              const audio = new Audio("/alarm-sound.mp3")
-              audio.play().catch(err => console.error("Error playing alarm sound:", err))
+              if (audioElement) {
+                audioElement.currentTime = 0
+                audioElement.play().catch(err => console.error("Error playing alarm sound:", err))
+              }
             }
             const text = t("takeMedicine", { medicine: item.medicineName, dosage: item.dosage })
             if (lastSpoken !== `${text}-${reminderCount}` && !isSpeaking) {
@@ -82,7 +170,7 @@ export function MedicationReminder() {
     const interval = setInterval(checkForReminders, 60000)
 
     return () => clearInterval(interval)
-  }, [currentReminder, speak, showNotification, t, reminderCount, lastSpoken, isSpeaking])
+  }, [currentReminder, speak, showNotification, t, reminderCount, lastSpoken, isSpeaking, audioElement, isSubscribed])
 
   const handleTakeMedicine = async () => {
     if (!currentReminder) return

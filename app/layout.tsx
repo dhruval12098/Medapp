@@ -6,6 +6,7 @@ import { PWAProvider } from "@/components/pwa-provider"
 import { LanguageProvider } from "@/components/language-provider"
 import { EnhancedVoiceProvider } from "@/components/enhanced-voice-provider"
 import { NotificationProvider } from "@/components/notification-provider"
+import { PushNotificationProvider } from "@/components/push-notification-service"
 import { MedicationReminder } from "@/components/medication-reminder"
 import { OfflineIndicator } from "@/components/offline-indicator"
 import { LoadingScreen } from "@/components/loading-screen"
@@ -97,13 +98,15 @@ export default function RootLayout({
           <LanguageProvider>
             <EnhancedVoiceProvider>
               <NotificationProvider>
-                <AuthProvider>
-                  <AuthWrapper>
-                    {children}
-                    <MedicationReminder />
-                    <OfflineIndicator />
-                  </AuthWrapper>
-                </AuthProvider>
+                <PushNotificationProvider>
+                  <AuthProvider>
+                    <AuthWrapper>
+                      {children}
+                      <MedicationReminder />
+                      <OfflineIndicator />
+                    </AuthWrapper>
+                  </AuthProvider>
+                </PushNotificationProvider>
               </NotificationProvider>
             </EnhancedVoiceProvider>
           </LanguageProvider>

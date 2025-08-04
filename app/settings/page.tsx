@@ -12,6 +12,7 @@ import Link from "next/link"
 import { useVoice } from "@/components/enhanced-voice-provider"
 import { useLanguage } from "@/components/language-provider"
 import { useNotification } from "@/components/notification-provider"
+import { usePushNotification } from "@/components/push-notification-service"
 import { getUserProfile, updateUserProfile } from "@/lib/supabase-storage"
 
 interface SettingsData {
@@ -38,6 +39,7 @@ export default function SettingsPage() {
   const { speak, isSupported } = useVoice()
   const { currentLanguage, setLanguage, t, availableLanguages } = useLanguage()
   const { showNotification } = useNotification()
+  const { isSubscribed, isPushSupported, subscribeToPushNotifications, unsubscribeFromPushNotifications, sendTestPushNotification } = usePushNotification()
 
   useEffect(() => {
     loadSettings()
@@ -268,10 +270,47 @@ export default function SettingsPage() {
               </p>
             </div>
 
-            <Button onClick={testNotification} className="w-full modern-button-secondary">
-              <Bell className="w-4 h-4 mr-2" />
-              {t("testNotification")}
-            </Button>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label className="text-sm font-semibold text-gray-700">Enable Push Notifications</Label>
+                <p className="text-xs text-gray-600">Receive notifications even when app is closed</p>
+              </div>
+              <Switch
+                checked={isSubscribed}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    subscribeToPushNotifications()
+                  } else {
+                    unsubscribeFromPushNotifications()
+                  }
+                }}
+                disabled={!isPushSupported}
+              />
+            </div>
+
+            <div className="flex space-x-2">
+              <Button onClick={testNotification} className="flex-1 modern-button-secondary">
+                <Bell className="w-4 h-4 mr-2" />
+                {t("testNotification")}
+              </Button>
+              
+              {isPushSupported && (
+                <Button 
+                  onClick={sendTestPushNotification} 
+                  className="flex-1 modern-button-secondary"
+                  disabled={!isSubscribed}
+                >
+                  <Smartphone className="w-4 h-4 mr-2" />
+                  Test Push
+                </Button>
+              )}
+            </div>
+            
+            {!isPushSupported && (
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-2xl">
+                <p className="text-sm text-yellow-800">Push notifications are not supported in this browser.</p>
+              </div>
+            )}
           </div>
         </div>
 
