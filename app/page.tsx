@@ -21,7 +21,7 @@ export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [isInitialized, setIsInitialized] = useState(false)
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
-  const [canInstall, setCanInstall] = useState(true) // Always show install button
+  const [canInstall, setCanInstall] = useState(true)
   const { speak } = useVoice()
   const { showNotification } = useNotification()
   const { t } = useLanguage()
@@ -52,8 +52,6 @@ export default function DashboardPage() {
     // PWA install prompt logic
     const handleBeforeInstallPrompt = (e: any) => {
       console.log('beforeinstallprompt event fired')
-      // Important: Don't prevent default here to allow the banner to show
-      // Store the event for later use
       setDeferredPrompt(e)
       setCanInstall(true)
     }
@@ -62,7 +60,6 @@ export default function DashboardPage() {
     const checkInstallability = () => {
       if (typeof window === "undefined") return
       
-      // Check if already installed
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
       const isInWebAppiOS = (window.navigator as any).standalone === true
@@ -74,7 +71,6 @@ export default function DashboardPage() {
         userAgent: navigator.userAgent
       })
       
-      // Always show install button for better UX
       setCanInstall(true)
     }
 
@@ -101,12 +97,7 @@ export default function DashboardPage() {
     
     if (deferredPrompt) {
       try {
-        // For Chrome/Edge/other browsers
-        // This is the key part - we need to call prompt() to show the installation prompt
-        // The browser will only show the prompt if it's called from a user gesture (like a click)
         deferredPrompt.prompt()
-        
-        // Wait for the user to respond to the prompt
         const { outcome } = await deferredPrompt.userChoice
         console.log('Install prompt outcome:', outcome)
         
@@ -115,14 +106,12 @@ export default function DashboardPage() {
           setCanInstall(false)
         }
         
-        // Clear the saved prompt since it can't be used again
         setDeferredPrompt(null)
       } catch (error) {
         console.error('Error during install:', error)
         showFallbackInstallInstructions()
       }
     } else {
-      // If no deferredPrompt is available, show manual installation instructions
       showFallbackInstallInstructions()
     }
   }
@@ -210,7 +199,6 @@ export default function DashboardPage() {
     logout()
   }
 
-  // Show loading state only if not initialized
   if (!isInitialized || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center">
@@ -227,39 +215,39 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-      {/* Updated Header - No Language Selector, Prominent Install Button */}
+      {/* Header - Improved for small screens */}
       <header className="sticky top-0 z-50 border-b border-white/20 bg-white/90 backdrop-blur-md shadow-sm">
-        <div className="max-w-md mx-auto px-6 py-4">
+        <div className="w-full max-w-sm mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            {/* Left Side - User Info */}
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                <User className="w-5 h-5 text-white" />
+            {/* Left Side - User Info - Responsive */}
+            <div className="flex items-center space-x-2 min-w-0 flex-1">
+              <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                <User className="w-4 h-4 text-white" />
               </div>
-              <div>
-                <p className="text-sm text-gray-600">{getGreeting()}</p>
-                <p className="font-semibold text-gray-900">{user?.user_metadata?.name || "User"}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-gray-600 truncate">{getGreeting()}</p>
+                <p className="font-semibold text-sm text-gray-900 truncate">{user?.user_metadata?.name || "User"}</p>
               </div>
             </div>
 
-            {/* Right Side - Action Buttons (Install + Logout only) */}
-            <div className="flex items-center space-x-3">
-              {/* Install App Button - Now Prominent */}
+            {/* Right Side - Action Buttons - Compact */}
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              {/* Install App Button */}
               <Button
                 variant="ghost"
                 size="sm"
-                className="flex items-center justify-center w-12 h-10 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="flex items-center justify-center w-9 h-9 rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200 shadow-md"
                 onClick={handleInstallClick}
                 title="Install App"
               >
-                <Download className="w-5 h-5" />
+                <Download className="w-4 h-4" />
               </Button>
 
               {/* Logout Button */}
               <Button
                 variant="ghost"
                 size="sm"
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-red-50 hover:bg-red-100 transition-all duration-200 shadow-sm border border-red-200"
+                className="flex items-center justify-center w-9 h-9 rounded-lg bg-red-50 hover:bg-red-100 transition-all duration-200 shadow-sm border border-red-200"
                 onClick={handleLogout}
                 title="Logout"
               >
@@ -270,7 +258,8 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-6 py-6 space-y-6">
+      {/* Main Content - Improved container */}
+      <main className="w-full max-w-sm mx-auto px-4 py-4 space-y-4 pb-20">
         {/* Notification Setup */}
         {showNotificationSetup && (
           <div className="animate-slide-up">
@@ -278,22 +267,22 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* App Install Reminder Card - More Prominent */}
-        <div className="modern-card p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 animate-fade-scale shadow-lg">
+        {/* App Install Reminder Card - Fixed contrast */}
+        <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-3 rounded-xl shadow-lg animate-fade-scale border border-blue-200">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                <Download className="w-6 h-6 text-white" />
+            <div className="flex items-center space-x-3 min-w-0 flex-1">
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                <Download className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <p className="font-bold text-white text-lg">Install MedTracker</p>
-                <p className="text-sm text-white/90">Get offline access & notifications</p>
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-white text-base truncate">Install MedTracker</p>
+                <p className="text-xs text-white/90 truncate">Get offline access & notifications</p>
               </div>
             </div>
             <Button
               onClick={handleInstallClick}
               size="sm"
-              className="bg-white/20 hover:bg-white/30 text-white border-white/30 rounded-xl px-4 py-2 backdrop-blur-sm"
+              className="bg-white hover:bg-gray-100 text-blue-600 font-semibold border-0 rounded-lg px-3 py-1.5 text-xs flex-shrink-0 shadow-sm"
             >
               Install
             </Button>
@@ -302,22 +291,22 @@ export default function DashboardPage() {
 
         {/* Next Medicine Card */}
         {nextMedicine && (
-          <div className="medicine-time-card text-white animate-fade-scale">
+          <div className="medicine-time-card text-white animate-fade-scale rounded-xl p-4">
             <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center mb-3">
-                  <Clock className="w-5 h-5 mr-2 opacity-90" />
-                  <span className="text-sm font-medium opacity-90">Next Medicine</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center mb-2">
+                  <Clock className="w-4 h-4 mr-2 opacity-90 flex-shrink-0" />
+                  <span className="text-xs font-medium opacity-90">Next Medicine</span>
                 </div>
-                <h3 className="text-xl font-bold mb-1">{nextMedicine.medicineName}</h3>
-                <p className="opacity-90 mb-1">{nextMedicine.dosage}</p>
-                <p className="text-sm opacity-75">
+                <h3 className="text-lg font-bold mb-1 truncate">{nextMedicine.medicineName}</h3>
+                <p className="opacity-90 mb-1 text-sm truncate">{nextMedicine.dosage}</p>
+                <p className="text-xs opacity-75">
                   {formatTime(nextMedicine.scheduledTime)} • {getTimeUntilNext(nextMedicine.scheduledTime)}
                 </p>
               </div>
               <Button
                 onClick={() => handleTakeMedicine(nextMedicine.id, nextMedicine.medicineName)}
-                className="bg-white/20 hover:bg-white/30 text-white border-white/30 rounded-2xl px-6 py-3"
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30 rounded-xl px-4 py-2 text-sm flex-shrink-0"
               >
                 Take Now
               </Button>
@@ -326,104 +315,104 @@ export default function DashboardPage() {
         )}
 
         {/* Progress Card */}
-        <div className="modern-card p-6 animate-slide-up">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Today's Progress</h3>
-            <span className="text-2xl font-bold text-purple-600">{Math.round(adherenceRate)}%</span>
+        <div className="modern-card p-4 animate-slide-up rounded-xl bg-white/80 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-base font-semibold text-gray-900">Today's Progress</h3>
+            <span className="text-xl font-bold text-purple-600">{Math.round(adherenceRate)}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
+          <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
             <div 
-              className="bg-gradient-to-r from-purple-500 to-blue-600 h-3 rounded-full transition-all duration-500"
+              className="bg-gradient-to-r from-purple-500 to-blue-600 h-2.5 rounded-full transition-all duration-500"
               style={{ width: `${adherenceRate}%` }}
             ></div>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-xs text-gray-600">
             {todaySchedule.filter((item) => item.status === "taken").length} of {todaySchedule.length} medicines taken
           </p>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4 animate-slide-up">
-          <Link href="/add-medicine">
-            <div className="quick-action-card bg-gradient-to-br from-blue-500 to-purple-600 text-white text-center p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
-              <Plus className="w-8 h-8 mx-auto mb-3" />
-              <p className="font-semibold">Add Medicine</p>
+        {/* Quick Actions - Improved for mobile */}
+        <div className="grid grid-cols-2 gap-3 animate-slide-up">
+          <Link href="/add-medicine" className="block">
+            <div className="quick-action-card bg-gradient-to-br from-blue-500 to-purple-600 text-white text-center p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <Plus className="w-6 h-6 mx-auto mb-2" />
+              <p className="font-semibold text-sm">Add Medicine</p>
             </div>
           </Link>
-          <Link href="/medicines">
-            <div className="quick-action-card bg-gradient-to-br from-green-400 to-blue-500 text-white text-center p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
-              <Calendar className="w-8 h-8 mx-auto mb-3" />
-              <p className="font-semibold">My Medicines</p>
+          <Link href="/medicines" className="block">
+            <div className="quick-action-card bg-gradient-to-br from-green-400 to-blue-500 text-white text-center p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <Calendar className="w-6 h-6 mx-auto mb-2" />
+              <p className="font-semibold text-sm">My Medicines</p>
             </div>
           </Link>
         </div>
 
         {/* Today's Medications */}
-        <div className="modern-card p-6 animate-slide-up">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Today's Schedule</h3>
+        <div className="modern-card p-4 animate-slide-up rounded-xl bg-white/80 backdrop-blur-sm">
+          <h3 className="text-base font-semibold text-gray-900 mb-3">Today's Schedule</h3>
           {todaySchedule.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Calendar className="w-8 h-8 text-gray-400" />
+            <div className="text-center py-6">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Calendar className="w-6 h-6 text-gray-400" />
               </div>
-              <p className="text-gray-600 mb-4">No medications scheduled for today</p>
+              <p className="text-gray-600 mb-3 text-sm">No medications scheduled for today</p>
               <Link href="/add-medicine">
-                <Button className="modern-button modern-button-primary bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-6 py-3">
+                <Button className="modern-button modern-button-primary bg-purple-600 hover:bg-purple-700 text-white rounded-lg px-4 py-2 text-sm">
                   Add Your First Medicine
                 </Button>
               </Link>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {todaySchedule.map((item, index) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between p-4 bg-gray-50/80 rounded-2xl hover:bg-gray-100/80 transition-all duration-300 shadow-sm"
+                  className="flex items-center justify-between p-3 bg-gray-50/80 rounded-xl hover:bg-gray-100/80 transition-all duration-300 shadow-sm"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-3 min-w-0 flex-1">
                     <div className="flex-shrink-0">
                       {item.status === "taken" ? (
-                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                          <CheckCircle className="w-5 h-5 text-green-600" />
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
                         </div>
                       ) : item.status === "missed" ? (
-                        <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                          <AlertCircle className="w-5 h-5 text-red-600" />
+                        <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                          <AlertCircle className="w-4 h-4 text-red-600" />
                         </div>
                       ) : (
-                        <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                          <Clock className="w-5 h-5 text-orange-600" />
+                        <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                          <Clock className="w-4 h-4 text-orange-600" />
                         </div>
                       )}
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">{item.medicineName}</h4>
-                      <p className="text-sm text-gray-600">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-semibold text-gray-900 text-sm truncate">{item.medicineName}</h4>
+                      <p className="text-xs text-gray-600 truncate">
                         {item.dosage} • {formatTime(item.scheduledTime)}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2 flex-shrink-0">
                     {item.status === "taken" && (
-                      <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
                         Taken
                       </span>
                     )}
                     {item.status === "missed" && (
-                      <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                      <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
                         Missed
                       </span>
                     )}
                     {item.status === "pending" && (
                       <>
-                        <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+                        <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
                           Pending
                         </span>
                         <Button
                           onClick={() => handleTakeMedicine(item.id, item.medicineName)}
                           size="sm"
-                          className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-4 py-2"
+                          className="bg-purple-600 hover:bg-purple-700 text-white rounded-lg px-3 py-1.5 text-xs"
                         >
                           Take
                         </Button>
@@ -435,35 +424,39 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-
-        {/* Bottom Navigation */}
-        <div className="grid grid-cols-4 gap-2 animate-slide-up">
-          <Link href="/contacts">
-            <div className="quick-action-card bg-white/80 text-center py-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
-              <Heart className="w-6 h-6 mx-auto mb-2 text-red-500" />
-              <p className="text-xs font-medium text-gray-700">Family</p>
-            </div>
-          </Link>
-          <Link href="/history">
-            <div className="quick-action-card bg-white/80 text-center py-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
-              <Calendar className="w-6 h-6 mx-auto mb-2 text-purple-500" />
-              <p className="text-xs font-medium text-gray-700">History</p>
-            </div>
-          </Link>
-          <Link href="/reports">
-            <div className="quick-action-card bg-white/80 text-center py-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
-              <CheckCircle className="w-6 h-6 mx-auto mb-2 text-green-500" />
-              <p className="text-xs font-medium text-gray-700">Reports</p>
-            </div>
-          </Link>
-          <Link href="/settings">
-            <div className="quick-action-card bg-white/80 text-center py-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
-              <Settings className="w-6 h-6 mx-auto mb-2 text-gray-500" />
-              <p className="text-xs font-medium text-gray-700">Settings</p>
-            </div>
-          </Link>
-        </div>
       </main>
+
+      {/* Fixed Bottom Navigation - Improved for small screens */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-gray-200/50 shadow-lg">
+        <div className="w-full max-w-sm mx-auto px-2 py-2">
+          <div className="grid grid-cols-4 gap-1">
+            <Link href="/contacts" className="block">
+              <div className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-gray-100/80 transition-all duration-200 min-h-[60px]">
+                <Heart className="w-5 h-5 text-red-500 mb-1 flex-shrink-0" />
+                <p className="text-xs font-medium text-gray-700 text-center leading-tight">Family</p>
+              </div>
+            </Link>
+            <Link href="/history" className="block">
+              <div className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-gray-100/80 transition-all duration-200 min-h-[60px]">
+                <Calendar className="w-5 h-5 text-purple-500 mb-1 flex-shrink-0" />
+                <p className="text-xs font-medium text-gray-700 text-center leading-tight">History</p>
+              </div>
+            </Link>
+            <Link href="/reports" className="block">
+              <div className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-gray-100/80 transition-all duration-200 min-h-[60px]">
+                <CheckCircle className="w-5 h-5 text-green-500 mb-1 flex-shrink-0" />
+                <p className="text-xs font-medium text-gray-700 text-center leading-tight">Reports</p>
+              </div>
+            </Link>
+            <Link href="/settings" className="block">
+              <div className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-gray-100/80 transition-all duration-200 min-h-[60px]">
+                <Settings className="w-5 h-5 text-gray-500 mb-1 flex-shrink-0" />
+                <p className="text-xs font-medium text-gray-700 text-center leading-tight">Settings</p>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

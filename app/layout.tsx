@@ -9,7 +9,7 @@ import { NotificationProvider } from "@/components/notification-provider"
 import { PushNotificationProvider } from "@/components/push-notification-service"
 import { MedicationReminder } from "@/components/medication-reminder"
 import { OfflineIndicator } from "@/components/offline-indicator"
-import { LoadingScreen } from "@/components/loading-screen"
+import { AppLoadingWrapper } from "@/components/app-loading-wrapper"
 import { AuthProvider } from "@/components/auth-provider"
 import { AuthWrapper } from "@/components/auth-wrapper"
 import Script from "next/script"
@@ -93,24 +93,25 @@ export default function RootLayout({
         </Script>
       </head>
       <body className={inter.className}>
-        <LoadingScreen />
-        <PWAProvider>
-          <LanguageProvider>
-            <EnhancedVoiceProvider>
-              <NotificationProvider>
-                <PushNotificationProvider>
-                  <AuthProvider>
-                    <AuthWrapper>
-                      {children}
-                      <MedicationReminder />
-                      <OfflineIndicator />
-                    </AuthWrapper>
-                  </AuthProvider>
-                </PushNotificationProvider>
-              </NotificationProvider>
-            </EnhancedVoiceProvider>
-          </LanguageProvider>
-        </PWAProvider>
+        <AppLoadingWrapper>
+          <PWAProvider>
+            <LanguageProvider>
+              <EnhancedVoiceProvider>
+                <NotificationProvider>
+                  <PushNotificationProvider>
+                    <AuthProvider>
+                      <AuthWrapper>
+                        {children}
+                        <MedicationReminder />
+                        <OfflineIndicator />
+                      </AuthWrapper>
+                    </AuthProvider>
+                  </PushNotificationProvider>
+                </NotificationProvider>
+              </EnhancedVoiceProvider>
+            </LanguageProvider>
+          </PWAProvider>
+        </AppLoadingWrapper>
       </body>
     </html>
   )
